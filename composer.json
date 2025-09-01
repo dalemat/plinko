@@ -1,0 +1,23 @@
+{
+    "name": "acmeverse/flarum-plinko-fortune",
+    "description": "Simple Plinko game for Flarum",
+    "type": "flarum-extension",
+    "require": {
+        "flarum/core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Acmeverse\\PlinkoFortune\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Plinko Fortune",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-coins",
+                "color": "#e74c3c"
+            }
+        }
+    }
+}

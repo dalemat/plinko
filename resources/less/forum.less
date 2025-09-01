@@ -1,0 +1,170 @@
+.PlinkoButton {
+  color: #e74c3c !important;
+  &:hover { color: #c0392b !important; }
+}
+
+.PlinkoModal {
+  .Modal-content {
+    max-width: 600px;
+    width: 90vw;
+  }
+
+  .plinko-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    
+    .balance {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .multipliers {
+      display: flex;
+      gap: 5px;
+      
+      .mult {
+        padding: 2px 6px;
+        background: #007bff;
+        color: white;
+        border-radius: 3px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .plinko-board {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+
+    .drop-positions {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      
+      .drop-pos {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #95a5a6;
+        cursor: pointer;
+        transition: all 0.3s;
+        
+        &.active, &:hover {
+          background: #e74c3c;
+          transform: scale(1.2);
+        }
+      }
+    }
+
+    .pegs {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      right: 0;
+      height: 150px;
+      
+      .peg {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #ecf0f1;
+        border-radius: 50%;
+        
+        // Simple peg layout
+        &:nth-child(1) { top: 0; left: 20%; }
+        &:nth-child(2) { top: 0; left: 40%; }
+        &:nth-child(3) { top: 0; left: 60%; }
+        &:nth-child(4) { top: 0; left: 80%; }
+        &:nth-child(5) { top: 30px; left: 10%; }
+        &:nth-child(6) { top: 30px; left: 30%; }
+        &:nth-child(7) { top: 30px; left: 50%; }
+        &:nth-child(8) { top: 30px; left: 70%; }
+        &:nth-child(9) { top: 30px; left: 90%; }
+        // ... continue pattern for remaining pegs
+      }
+    }
+
+    .ball {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #f1c40f;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .slots {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 40px;
+      
+      .slot {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #7f8c8d;
+        background: #34495e;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s;
+        
+        &.winning {
+          background: #27ae60;
+          animation: glow 1s ease-in-out;
+        }
+      }
+    }
+  }
+
+  .plinko-controls {
+    text-align: center;
+    margin-bottom: 20px;
+    
+    input {
+      margin-right: 10px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100px;
+    }
+  }
+
+  .result {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    
+    h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    
+    p {
+      margin: 5px 0;
+    }
+  }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px #27ae60; }
+  50% { box-shadow: 0 0 20px #27ae60, 0 0 30px #27ae60; }
+}
