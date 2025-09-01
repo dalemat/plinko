@@ -1,0 +1,32 @@
+acmeverse-plinko-fortune:
+  admin:
+    settings:
+      title: Plinko Fortune Settings
+    max_attempts_label: Maximum Attempts per User
+    max_attempts_help: Set the maximum number of attempts each user can have (-1 for unlimited)
+    enable_leaderboard_label: Enable Leaderboard
+    enable_leaderboard_help: Show a leaderboard with top scores
+    
+  forum:
+    game:
+      title: Plinko Fortune
+      play_button: Play Game
+      reset_button: Reset Game
+      score_label: "Score: {score}"
+      attempts_left: "Attempts left: {attempts}"
+      game_over: Game Over!
+      high_score: "High Score: {score}"
+      
+    leaderboard:
+      title: Leaderboard
+      rank: Rank
+      player: Player
+      score: Score
+      no_scores: No scores yet. Be the first to play!
+      
+    navigation:
+      plinko_text: Plinko Game
+      
+  lib:
+    validation:
+      max_attempts_reached: You have reached the maximum number of attempts for today.
