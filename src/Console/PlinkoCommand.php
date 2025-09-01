@@ -4,20 +4,26 @@ namespace Acmeverse\PlinkoFortune\Console;
 
 use Flarum\Console\AbstractCommand;
 use Acmeverse\PlinkoFortune\Model\PlinkoGame;
-use Acmeverse\PlinkoFortune\PlinkoService;
 use Flarum\User\User;
 use Flarum\Settings\SettingsRepositoryInterface;
 
 class PlinkoCommand extends AbstractCommand
 {
-    protected $signature = 'plinko {action} {key?} {value?}';
-    protected $description = 'Manage Plinko game';
+    protected function configure()
+    {
+        $this
+            ->setName('plinko')
+            ->setDescription('Manage Plinko game')
+            ->addArgument('action', null, 'Action to perform (stats, config, points)')
+            ->addArgument('key', null, 'Configuration key or username')
+            ->addArgument('value', null, 'Configuration value or points amount');
+    }
 
     protected function fire()
     {
-        $action = $this->argument('action');
-        $key = $this->argument('key');
-        $value = $this->argument('value');
+        $action = $this->input->getArgument('action');
+        $key = $this->input->getArgument('key');
+        $value = $this->input->getArgument('value');
 
         switch ($action) {
             case 'stats':
@@ -33,11 +39,16 @@ class PlinkoCommand extends AbstractCommand
                 break;
                 
             case 'points':
-                $this->managePoints();
+                $this->managePoints($key, $value);
                 break;
                 
             default:
-                $this->error("Available actions: stats, config, points");
+                $this->output->writeln("<error>Available actions: stats, config, points</error>");
+                $this->output->writeln("<info>Examples:</info>");
+                $this->output->writeln("  php flarum plinko stats");
+                $this->output->writeln("  php flarum plinko config");
+                $this->output->writeln("  php flarum plinko config max_bet 100");
+                $this->output->writeln("  php flarum plinko points username 1000");
         }
     }
 
@@ -59,43 +70,36 @@ class PlinkoCommand extends AbstractCommand
                 ->limit(5)
                 ->get();
 
-            $this->info("=== PLINKO STATISTICS ===");
-            $this->line("Total Games: " . number_format($totalGames));
-            $this->line("Total Bets: " . number_format($totalBets) . " points");
-            $this->line("Total Payouts: " . number_format($totalPayouts) . " points");
-            $this->line("House Profit: " . number_format($totalProfit) . " points");
+            $this->output->writeln("<info>=== PLINKO STATISTICS ===</info>");
+            $this->output->writeln("Total Games: " . number_format($totalGames));
+            $this->output->writeln("Total Bets: " . number_format($totalBets) . " points");
+            $this->output->writeln("Total Payouts: " . number_format($totalPayouts) . " points");
+            $this->output->writeln("House Profit: " . number_format($totalProfit) . " points");
             
             if ($totalGames > 0) {
                 $avgBet = $totalBets / $totalGames;
                 $avgPayout = $totalPayouts / $totalGames;
-                $this->line("Average Bet: " . number_format($avgBet, 2) . " points");
-                $this->line("Average Payout: " . number_format($avgPayout, 2) . " points");
+                $this->output->writeln("Average Bet: " . number_format($avgBet, 2) . " points");
+                $this->output->writeln("Average Payout: " . number_format($avgPayout, 2) . " points");
             }
 
-            $this->info("\n=== RECENT GAMES ===");
-            if ($recentGames->count() > 0) {
-                foreach ($recentGames as $game) {
-                    $username = $game->user ? $game->user->username : 'Unknown';
-                    $this->line("$username: Bet {$game->bet_amount}, Won {$game->payout} (Multiplier: {$game->multiplier}x)");
-                }
-            } else {
-                $this->line("No games played yet");
+            $this->output->writeln("\n<info>=== RECENT GAMES ===</info>");
+            foreach ($recentGames as $game) {
+                $user = User::find($game->user_id);
+                $username = $user ? $user->username : "User#{$game->user_id}";
+                $this->output->writeln("$username: Bet {$game->bet_amount}, Won {$game->payout}, Slot {$game->slot_hit}");
             }
 
-            $this->info("\n=== TOP PLAYERS ===");
-            if ($topPlayers->count() > 0) {
-                foreach ($topPlayers as $player) {
-                    $user = User::find($player->user_id);
-                    $username = $user ? $user->username : 'Unknown';
-                    $profit = $player->total_payouts - $player->total_bets;
-                    $this->line("$username: {$player->games_count} games, Profit: $profit points");
-                }
-            } else {
-                $this->line("No players yet");
+            $this->output->writeln("\n<info>=== TOP PLAYERS ===</info>");
+            foreach ($topPlayers as $player) {
+                $user = User::find($player->user_id);
+                $username = $user ? $user->username : "User#{$player->user_id}";
+                $profit = $player->total_payouts - $player->total_bets;
+                $this->output->writeln("$username: {$player->games_count} games, Profit: $profit points");
             }
 
         } catch (\Exception $e) {
-            $this->error("Error getting stats: " . $e->getMessage());
+            $this->output->writeln("<error>Error getting stats: " . $e->getMessage() . "</error>");
         }
     }
 
@@ -103,17 +107,18 @@ class PlinkoCommand extends AbstractCommand
     {
         $settings = resolve(SettingsRepositoryInterface::class);
         
+        $this->output->writeln("<info>=== PLINKO CONFIGURATION ===</info>");
+        
         $configs = [
-            'acmeverse-plinko.enabled' => 'Enabled',
-            'acmeverse-plinko.max_bet' => 'Max Bet',
-            'acmeverse-plinko.min_bet' => 'Min Bet',
-            'acmeverse-plinko.daily_limit' => 'Daily Limit'
+            'enabled' => 'Game Enabled',
+            'max_bet' => 'Maximum Bet',
+            'min_bet' => 'Minimum Bet', 
+            'daily_limit' => 'Daily Game Limit'
         ];
 
-        $this->info("=== PLINKO CONFIGURATION ===");
         foreach ($configs as $key => $label) {
-            $value = $settings->get($key, 'Not set');
-            $this->line("$label: $value");
+            $value = $settings->get("acmeverse-plinko.$key", 'Not set');
+            $this->output->writeln("$label: $value");
         }
     }
 
@@ -122,7 +127,12 @@ class PlinkoCommand extends AbstractCommand
         $allowedKeys = ['enabled', 'max_bet', 'min_bet', 'daily_limit'];
         
         if (!in_array($key, $allowedKeys)) {
-            $this->error("Allowed keys: " . implode(', ', $allowedKeys));
+            $this->output->writeln("<error>Allowed keys: " . implode(', ', $allowedKeys) . "</error>");
+            return;
+        }
+
+        if ($value === null) {
+            $this->output->writeln("<error>Value is required for config changes</error>");
             return;
         }
 
@@ -137,17 +147,21 @@ class PlinkoCommand extends AbstractCommand
 
         $settings->set($settingKey, $value);
         
-        $this->info("Setting updated: $key = $value");
+        $this->output->writeln("<info>Setting updated: $key = $value</info>");
     }
 
-    private function managePoints()
+    private function managePoints($username, $amount)
     {
-        $username = $this->ask('Enter username:');
-        $amount = (int) $this->ask('Enter points amount (positive to add, negative to subtract):');
+        if (!$username || $amount === null) {
+            $this->output->writeln("<error>Usage: php flarum plinko points <username> <amount></error>");
+            return;
+        }
 
+        $amount = (int) $amount;
         $user = User::where('username', $username)->first();
+        
         if (!$user) {
-            $this->error("User '$username' not found");
+            $this->output->writeln("<error>User '$username' not found</error>");
             return;
         }
 
@@ -156,7 +170,7 @@ class PlinkoCommand extends AbstractCommand
         $newPoints = $currentPoints + $amount;
         
         if ($newPoints < 0) {
-            $this->error("Cannot set negative points. User has $currentPoints points.");
+            $this->output->writeln("<error>Cannot set negative points. User has $currentPoints points.</error>");
             return;
         }
 
@@ -164,6 +178,6 @@ class PlinkoCommand extends AbstractCommand
         $user->save();
 
         $action = $amount >= 0 ? 'Added' : 'Subtracted';
-        $this->info("$action " . abs($amount) . " points to $username. New balance: $newPoints points");
+        $this->output->writeln("<info>$action " . abs($amount) . " points to $username. New balance: $newPoints points</info>");
     }
 }
